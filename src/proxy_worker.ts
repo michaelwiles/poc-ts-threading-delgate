@@ -1,6 +1,6 @@
-import { Worker } from "worker_threads";
+import {Worker} from "worker_threads";
 import path from "path";
-import { randomUUID } from "crypto";
+import {randomUUID} from "crypto";
 import EventEmitter from "events";
 
 
@@ -10,8 +10,6 @@ export class ProxyWorker {
     private worker!: Worker
 
     private receiveEventEmitter = new EventEmitter()
-
-    private promises = new Map<string, Executor>();
 
     public initialiseWorker(): void {
         console.log(__dirname)
@@ -23,17 +21,24 @@ export class ProxyWorker {
         })
     }
 
-    public async invoke(parmaters: any): Promise<any> {
-        let invocationId = randomUUID();
+    public async invoke(methodInvocation: RemoteMethodInvocation): Promise<any> {
 
         let promise = new Promise<any>((resolve, reject) => {
-            this.receiveEventEmitter.addListener(`method-returned-${invocationId}`, result => {
+            this.receiveEventEmitter.addListener(`method-returned-${methodInvocation.methodInvocationId}`, result => {
                 resolve(result)
             })
             //setTimeout(reject, 10000)
         });
-        this.worker.postMessage({invocationId: invocationId, parameters: {x: 'hello', y: 'goodbye'}})
+        this.worker.postMessage(methodInvocation)
         return promise;
     }
 }
+
+export class RemoteMethodInvocation {
+    methodInvocationId = randomUUID();
+
+    constructor(readonly methodName: string, readonly parameters: any[]) {
+    }
+}
+
 
