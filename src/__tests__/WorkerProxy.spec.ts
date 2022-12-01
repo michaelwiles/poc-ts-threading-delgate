@@ -38,4 +38,18 @@ describe("Proxy Against Thread", () => {
         let name = await proxy.calculateName('Michael', 'Wiles');
         expect(name).toEqual("Michael Wiles")
     }, 10000)
+
+    test("Method call on thread via Proxy No local Await", async () => {
+        /** remote method still runs but local does not wait for it */
+        const proxyWorker = new ProxyWorker();
+        proxyWorker.initialiseWorker()
+        let proxy = <IDoWork><unknown>new Proxy(proxyWorker, remoteMethodHandler);
+
+        //let newVar = await proxyWorker.invoke(new RemoteMethodInvocation("doWork", ['this is from the mother ship', 45]));
+        let message = "mesasge from above";
+        let value = 434;
+        proxy.doWork(message, value);
+        console.log("finished doWork call")
+        return new Promise((resolve) => setTimeout(resolve, 5000));
+    }, 10000)
 })
